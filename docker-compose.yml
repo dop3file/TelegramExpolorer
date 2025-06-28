@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  rabbitmq:
+    image: rabbitmq:3.12-management  # Версия с веб-интерфейсом
+    container_name: rabbitmq
+    hostname: rabbitmq
+    ports:
+      - "5672:5672"   # AMQP (основной протокол)
+      - "15672:15672" # Web UI (логин: guest/guest)
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq  # Сохраняем данные
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest     # Дефолтный логин (можно изменить)
+      - RABBITMQ_DEFAULT_PASS=guest     # Дефолтный пароль
+    restart: unless-stopped
+  db:
+    container_name: db
+    image: postgres:15
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: telegram_explorer
+    volumes:
+      - /var/postgres:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+volumes:
+  rabbitmq_data:
