@@ -15,6 +15,7 @@ from sqlalchemy import (
     func,
     select,
     update,
+    Text,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -23,7 +24,19 @@ class Base(DeclarativeBase): ...
 
 
 class ChatDB(Base):
-    __tablename__ = "flights"
+    __tablename__ = "chats"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     title: Mapped[str]
+
+
+class PostDB(Base):
+    __tablename__ = "posts"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    text: Mapped[str] = mapped_column(Text)
+    create_date: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=False))
+    link: Mapped[str]
+    chat_id: Mapped[int] = mapped_column(
+        ForeignKey(f"{ChatDB.__tablename__}.id", ondelete="CASCADE")
+    )

@@ -12,6 +12,7 @@ class Config:
     POSTS_QUEUE_NAME: str = env.str("POSTS_QUEUE_NAME")
 
     RABBIT_MQ_URL: str = env.str("RABBIT_MQ_URL")
+    POSTGRES_DB_CONNECTOR: str = env.str("POSTGRES_DB_CONNECTOR")
 
 
 config = Config()

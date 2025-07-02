@@ -2,29 +2,75 @@ version: '3.8'
 
 services:
   rabbitmq:
-    image: rabbitmq:3.12-management  # Версия с веб-интерфейсом
+    image: rabbitmq:3.12-management
     container_name: rabbitmq
     hostname: rabbitmq
     ports:
-      - "5672:5672"   # AMQP (основной протокол)
-      - "15672:15672" # Web UI (логин: guest/guest)
+      - "5672:5672"
+      - "15672:15672"
     volumes:
-      - rabbitmq_data:/var/lib/rabbitmq  # Сохраняем данные
+      - rabbitmq_data:/var/lib/rabbitmq
     environment:
-      - RABBITMQ_DEFAULT_USER=guest     # Дефолтный логин (можно изменить)
-      - RABBITMQ_DEFAULT_PASS=guest     # Дефолтный пароль
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
     restart: unless-stopped
   db:
     container_name: db
     image: postgres:15
     environment:
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+      POSTGRES_USER: root
       POSTGRES_DB: telegram_explorer
     volumes:
       - /var/postgres:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+  elasticsearch:
+    image: elasticsearch:9.0.2
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+      - xpack.security.enabled=false
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    networks:
+      - telegram_explorer
+  kibana:
+    image: kibana:9.0.2
+    container_name: kibana
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    depends_on:
+      - elasticsearch
+    networks:
+      - telegram_explorer
+
+  app:
+    build:
+      context: .
+      dockerfile: Docker/api/Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    environment:
+      - POSTGRES_DB_CONNECTOR=postgresql+asyncpg://root:root@db:5432/telegram_explorer
+    depends_on:
+      - db
+    command: python TelegramExplorer/api/main.py
 
 volumes:
   rabbitmq_data:
+    driver: local
+  es_data:
+    driver: local
+
+networks:
+  telegram_explorer:
+    driver: bridge

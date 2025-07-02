@@ -10,7 +10,12 @@ from sqlalchemy.ext.asyncio import (
 class DBSession:
     def __init__(self, db_url: str, echo: bool = False) -> None:
         logger.info("Create session handler")
-        self._engine = create_async_engine(db_url, echo=echo)
+        self._engine = create_async_engine(
+            db_url,
+            echo=echo,
+            pool_size=20,
+            max_overflow=2,
+        )
         self._async_session = async_sessionmaker(
             self._engine, expire_on_commit=False, class_=AsyncSession
         )
